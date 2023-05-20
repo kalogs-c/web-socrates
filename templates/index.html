@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <input type="text" name="username" id="username" />
+    <input type="text" name="command" id="command" />
+    <input type="checkbox" name="is_private" id="is_private" />
+    <button id="send">Send</button>
+
+    <input type="text" name="message" id="message" />
+    <button id="send-m">Send</button>
+
+    <h1 id="title"></h1>
+
+    <script>
+      window.onload = function () {
+        const ws = new WebSocket("ws://localhost:8080/ws");
+
+        const username = document.getElementById("username");
+        const command = document.getElementById("command");
+        const isPrivate = document.getElementById("is_private");
+        const title = document.getElementById("title");
+        const send = document.getElementById("send");
+
+        const message = document.getElementById("message");
+        const sendM = document.getElementById("send-m");
+
+        send.addEventListener("click", () => {
+          console.log(username.value);
+          ws.send(
+            JSON.stringify({
+              username: username.value,
+              command: command.value,
+              is_private: isPrivate.checked,
+            })
+          );
+        });
+
+        sendM.addEventListener("click", () => {
+          console.log(message.value);
+          ws.send(JSON.stringify({ message: message.value }));
+        });
+
+        ws.addEventListener("message", (event) => {
+          title.innerHTML = event.data;
+        });
+
+        ws.onopen = function () {
+          console.log("connected");
+        };
+      };
+    </script>
+  </body>
+</html>
