@@ -1,0 +1,49 @@
+version: '3.3'
+
+services:
+  app:
+    build: 
+      context: .
+      dockerfile: Dev.Dockerfile
+    container_name: app
+    networks:
+      - web-socrates-network
+    ports:
+      - 8080:8080
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=web-socrates  
+      - POSTGRES_PASSWORD=web-socrates
+      - POSTGRES_DB=web-socrates
+      - DATABASE_HOST=postgres 
+    ports:
+      - '5432:5432'
+    networks:
+      - web-socrates-network
+    
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: web-socrates@admin.com
+      PGADMIN_DEFAULT_PASSWORD: web-socrates
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    networks:
+      - web-socrates-network
+    restart: unless-stopped  
+
+networks:
+  web-socrates-network:
+    driver: bridge
