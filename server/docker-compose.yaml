@@ -12,8 +12,10 @@ services:
       - 8080:8080
     volumes:
       - .:/app
-    env_file:
-      - .env
+    # env_file:
+    #   - .env
+    environment:
+      - DATABASE_URL="user=web-socrates password=web-socrates dbname=web-socrates host=postgres sslmode=disable"
     depends_on:
       - postgres
 
