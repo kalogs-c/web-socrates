@@ -2,6 +2,7 @@ package connections
 
 import (
 	"database/sql"
+	"fmt"
 	"os"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -18,6 +19,7 @@ type PostgresConnection struct {
 }
 
 func NewPostgresConnection() (*PostgresConnection, error) {
+	fmt.Println(os.Getenv("DATABASE_URL"))
 	conn, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		return nil, err

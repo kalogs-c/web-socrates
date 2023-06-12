@@ -17,6 +17,6 @@ func main() {
 	userService := user.NewService(userRepository)
 	userHandler := user.NewHandler(userService)
 
-	router.InitRoutes(userHandler)
+	router.InitUserRoutes(userHandler)
 	router.Run(":8080")
 }

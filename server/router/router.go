@@ -8,10 +8,12 @@ import (
 
 var r *gin.Engine
 
-func InitRoutes(userHandler *user.Handler) {
+func InitUserRoutes(userHandler *user.Handler) {
 	r = gin.Default()
 
 	r.POST("/signup", userHandler.CreateUser)
+	r.POST("/login", userHandler.Login)
+	r.GET("/logout", userHandler.Logout)
 }
 
 func Run(address string) error {
