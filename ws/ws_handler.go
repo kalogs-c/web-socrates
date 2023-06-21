@@ -3,6 +3,7 @@ package ws
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -17,8 +18,12 @@ func NewHandler(hub *Hub) *Handler {
 }
 
 type CreateRoomRequest struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
+	ID                int    `json:"id"`
+	Name              string `json:"name"`
+	NumberOfQuestions int    `json:"number_of_questions"`
+	Timeout           int    `json:"timeout"`
+	Subject           string `json:"subject"`
+	Capacity          int    `json:"capacity"`
 }
 
 func (h *Handler) CreateRoom(c *gin.Context) {
@@ -29,9 +34,16 @@ func (h *Handler) CreateRoom(c *gin.Context) {
 	}
 
 	h.hub.Rooms[request.ID] = &Room{
-		ID:      request.ID,
-		Name:    request.Name,
-		Clients: make(map[int]*Client),
+		ID:                request.ID,
+		Name:              request.Name,
+		Clients:           make(map[int]*Client),
+		Answers:           make(chan *Answer),
+		Question:          &Question{},
+		NumberOfQuestions: request.NumberOfQuestions,
+		Timeout:           time.Duration(request.Timeout),
+		Subject:           request.Subject,
+		Capacity:          request.Capacity,
+		Players:           0,
 	}
 
 	c.JSON(http.StatusOK, request)
@@ -71,6 +83,7 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 		Answers:       make(chan *Answer, 10),
 		Notifications: make(chan *Notification, 10),
 		Messages:      make(chan *ChatMessage, 10),
+		Question:      make(chan *Question),
 		RoomID:        roomID,
 		ID:            clientID,
 		UserID:        userID,
@@ -89,7 +102,9 @@ func (h *Handler) JoinRoom(c *gin.Context) {
 
 	go client.WriteChatMessage()
 	go client.ReadChatMessage(h.hub)
-	client.WriteNotification(h.hub)
+	go client.WriteNotification(h.hub)
+	go client.WriteQuestion(h.hub)
+	client.ReadAnswer(h.hub)
 }
 
 type RoomResponse struct {

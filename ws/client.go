@@ -9,6 +9,7 @@ import (
 type Client struct {
 	Conn          *websocket.Conn
 	Answers       chan *Answer
+	Question      chan *Question
 	Notifications chan *Notification
 	Messages      chan *ChatMessage
 	ID            int    `json:"id"`
@@ -90,5 +91,39 @@ func (c *Client) WriteNotification(h *Hub) {
 		}
 
 		c.Conn.WriteJSON(message)
+	}
+}
+
+func (c *Client) WriteQuestion(h *Hub) {
+	defer c.Conn.Close()
+
+	for {
+		message, ok := <-c.Question
+		if !ok {
+			return
+		}
+
+		c.Conn.WriteJSON(message)
+	}
+}
+
+func (c *Client) ReadAnswer(h *Hub) {
+	defer c.Conn.Close()
+
+	for {
+		var answer Answer
+		err := c.Conn.ReadJSON(&answer)
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(
+				err,
+				websocket.CloseGoingAway,
+				websocket.CloseAbnormalClosure,
+			) {
+				log.Printf("error: %v", err)
+			}
+			break
+		}
+
+		h.Answers <- &answer
 	}
 }
